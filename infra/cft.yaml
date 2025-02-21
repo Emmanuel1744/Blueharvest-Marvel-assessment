@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to deploy a Lambda function that processes Marvel API data and uploads to S3.
+
+Parameters:
+  PublicKey:
+    Type: String
+    Description: Marvel API public key
+  PrivateKey:
+    Type: String
+    Description: Marvel API private key
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: comic-data
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'LambdaS3AccessPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                Resource:
+                  - !Sub 'arn:aws:s3:::comic-data'
+                  - !Sub 'arn:aws:s3:::comic-data/*'
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:MarvelAPISecrets*'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+
+  MarvelAPISecrets:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: 'MarvelAPISecrets'
+      Description: 'Marvel API keys'
+      SecretString: !Sub '{"public_key":"${PublicKey}","private_key":"${PrivateKey}"}'
+
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: ComicFunction
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: comic-data
+        S3Key: blueharvest.zip
+      Runtime: python3.9
+      Timeout: 900
+      EphemeralStorage:
+              Size: 1024
+      MemorySize: 1024
+      Layers:
+        - arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:8
+
+  EventBridgeRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: 'TriggerComicFunctionRule'
+      Description: 'Rule to trigger ComicFunction manually'
+      EventPattern:
+        source:
+          - 'aws.events'
+      State: 'ENABLED'
+      Targets:
+        - Arn: !GetAtt LambdaFunction.Arn
+          Id: 'ComicFunctionTarget'
+    DependsOn: LambdaFunction
+
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'events.amazonaws.com'
+      SourceArn: !GetAtt EventBridgeRule.Arn
+
+Outputs:
+  S3BucketName:
+    Description: 'The name of the S3 bucket'
+    Value: !Ref S3Bucket
+
+  LambdaFunctionName:
+    Description: 'The name of the Lambda function'
+    Value: !Ref LambdaFunction
+
+  EventBridgeRuleName:
+    Description: 'The name of the EventBridge rule'
+    Value: !Ref EventBridgeRule

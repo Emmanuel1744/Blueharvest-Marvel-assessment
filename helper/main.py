@@ -9,13 +9,13 @@ import pandas as pd
 from hashlib import md5
 from botocore.exceptions import ClientError
 
-# API_PUBLIC_KEY = os.environ.get("PUBLIC_KEY")
-# API_PRIVATE_KEY = os.environ.get("PRIVATE_KEY")
-# BUCKET_NAME = os.environ.get("BUCKET_NAME")
-# s3_client = boto3.client('s3')
-# secrets_manager_client = boto3.client('secretsmanager')
-API_PUBLIC_KEY = "bb48bfb3bc2678f6b8beffa7d4392587"
-API_PRIVATE_KEY = "5888027da25ee05452edf19ae437c1e68bed4e30"
+API_PUBLIC_KEY = os.environ.get("PUBLIC_KEY")
+API_PRIVATE_KEY = os.environ.get("PRIVATE_KEY")
+BUCKET_NAME = os.environ.get("BUCKET_NAME")
+s3_client = boto3.client('s3')
+secrets_manager_client = boto3.client('secretsmanager')
+# API_PUBLIC_KEY = "bb48bfb3bc2678f6b8beffa7d4392587"
+# API_PRIVATE_KEY = "5888027da25ee05452edf19ae437c1e68bed4e30"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

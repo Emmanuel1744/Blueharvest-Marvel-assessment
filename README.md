@@ -46,8 +46,17 @@ To successfully run the pipeline, follow these steps:
 
 ## **Testing the Solution**  
 Run unit tests using **pytest** to validate the functionality:  
-```bash
+
 pytest
+
+## **How to access the visualization**
+To successfully view the visualization, click on the PowerBI link below:
+https://app.powerbi.com/view?r=eyJrIjoiOTE5MmVhYWYtMjE5YS00ZThiLTgzOGYtY2RmMWYzMTUyNmQyIiwidCI6ImNlMWEzNDk1LTQ0MzAtNGYzNC04NDUyLWEwNzMwZjk2YjcyYiJ9
+ 
+1. The first page is the dashboard, showing the major information about the Characters in relation to the comics.
+2. The second page is the Insights, showing the Key Inights and the Recommendations, based on the dashboard.
+
+```bash
 ```
 
 ---
